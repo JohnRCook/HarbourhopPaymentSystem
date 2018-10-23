@@ -3,14 +3,16 @@ using HarbourhopPaymentSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HarbourhopPaymentSystem.Migrations
 {
     [DbContext(typeof(PaymentDatabaseContext))]
-    partial class PaymentDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20181023214711_BookingIdUniqueConstraint")]
+    partial class BookingIdUniqueConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

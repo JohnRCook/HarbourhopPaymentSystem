@@ -16,7 +16,7 @@ namespace HarbourhopPaymentSystem.Data
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<BookingPayment>().HasIndex(x => new { x.BookingId });
+            builder.Entity<BookingPayment>().HasIndex(x => new { x.BookingId }).IsUnique();
         }
 
     }
