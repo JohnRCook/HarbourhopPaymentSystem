@@ -21,7 +21,11 @@ namespace HarbourhopPaymentSystem.Controllers
         [HttpGet("Create")]
         public IActionResult CreatePayment(int bookingId, double amount)
         {
-            _bookingPaymentRepository.AddBookingPayment(new Data.Models.BookingPayment() { BookingId = bookingId, Amount = amount });
+            //TODO: if booking exits? what is the scenario? 
+
+            _bookingPaymentRepository.AddBookingPayment(new Data.Models.BookingPayment { BookingId = bookingId, Amount = amount });
+
+
             
             return Ok();
         }
