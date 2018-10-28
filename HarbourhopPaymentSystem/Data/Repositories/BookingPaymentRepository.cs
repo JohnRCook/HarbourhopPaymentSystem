@@ -20,17 +20,31 @@ namespace HarbourhopPaymentSystem.Data.Repositories
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Failed to get the booking payment with ID {bookingId} to the database.", ex);
+                Logger.LogError($"Failed to get the booking payment with ID {bookingId} from the database.", ex);
                 throw;
             }
         }
 
-        public void AddBookingPayment(BookingPayment bookingPayment)
+        public BookingPayment GetBookingPayment(string transactionId)
         {
             try
             {
-                Context.BookingPayments.Add(bookingPayment);
+                return Context.BookingPayments.SingleOrDefault(x => x.TransactionId == transactionId);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Failed to get the booking payment with transaction ID {transactionId} from the database.", ex);
+                throw;
+            }
+        }
+
+        public BookingPayment AddBookingPayment(BookingPayment bookingPayment)
+        {
+            try
+            {
+                var booking =  Context.BookingPayments.Add(bookingPayment);
                 Context.SaveChanges();
+                return booking.Entity;
             }
             catch (Exception ex)
             {

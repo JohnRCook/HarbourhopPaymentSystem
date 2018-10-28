@@ -1,32 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using HarbourhopPaymentSystem.Data;
 using HarbourhopPaymentSystem.Data.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Mollie.Api.Client;
+using Mollie.Api.Client.Abstract;
 
 namespace HarbourhopPaymentSystem
 {
-    public class Startup
+    public sealed class Startup
     {
-        public Startup(IConfiguration configuration)
+        private Settings _settings;
+
+        public Startup()
         {
-            Configuration = configuration;
+            _configuration = GetConfiguration();
         }
 
-        public IConfiguration Configuration { get; }
+        private IConfiguration GetConfiguration()
+        {
+            var builder = new ConfigurationBuilder();
+            IConfigurationRoot configuration =
+                builder.SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                       .AddJsonFile("appsettings.json")
+                       .AddUserSecrets<Settings>()
+                       .Build();
+
+            return configuration;
+        }
+
+        private readonly IConfiguration _configuration;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            ConfigureSettings();
+
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
@@ -36,17 +50,29 @@ namespace HarbourhopPaymentSystem
 
             ConfigureDatabase(services);
 
+            services.AddSingleton(_settings);
+            services.AddScoped<IPaymentClient>(_ => new PaymentClient(_settings.MollieApiKey));
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
         private void ConfigureDatabase(IServiceCollection services)
         {
             services.AddDbContext<PaymentDatabaseContext>(
-                options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                options => options.UseSqlServer(_settings.DefaultConnection)
             );
 
             services.AddTransient<DatabaseInitializer>();
             services.AddScoped<BookingPaymentRepository>();
+        }
+
+        private void ConfigureSettings()
+        {
+            var configurationSection = _configuration.GetSection("AppSettings");
+            _settings = new Settings();
+            configurationSection.Bind(_settings);
+            var connectionStringSection = _configuration.GetSection("ConnectionStrings");
+            connectionStringSection.Bind(_settings);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
