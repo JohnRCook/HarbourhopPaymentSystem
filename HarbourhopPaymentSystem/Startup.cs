@@ -1,6 +1,6 @@
-﻿using System;
-using HarbourhopPaymentSystem.Data;
+﻿using HarbourhopPaymentSystem.Data;
 using HarbourhopPaymentSystem.Data.Repositories;
+using HarbourhopPaymentSystem.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -8,38 +8,35 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Mollie.Api.Client;
-using Mollie.Api.Client.Abstract;
 
 namespace HarbourhopPaymentSystem
 {
     public sealed class Startup
     {
-        private Settings _settings;
-
-        public Startup()
+        public Startup(IHostingEnvironment env)
         {
-            _configuration = GetConfiguration();
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json",
+                     optional: false,
+                     reloadOnChange: true)
+                .AddEnvironmentVariables();
+
+            if (env.IsDevelopment())
+            {
+                builder.AddUserSecrets<Startup>();
+            }
+
+            _configuration = builder.Build();
         }
 
-        private IConfiguration GetConfiguration()
-        {
-            var builder = new ConfigurationBuilder();
-            IConfigurationRoot configuration =
-                builder.SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                       .AddJsonFile("appsettings.json")
-                       .AddUserSecrets<Settings>()
-                       .Build();
-
-            return configuration;
-        }
 
         private readonly IConfiguration _configuration;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            ConfigureSettings();
+            ConfigureApplicationSettings(services);
 
             services.Configure<CookiePolicyOptions>(options =>
             {
@@ -50,8 +47,8 @@ namespace HarbourhopPaymentSystem
 
             ConfigureDatabase(services);
 
-            services.AddSingleton(_settings);
-            services.AddScoped<IPaymentClient>(_ => new PaymentClient(_settings.MollieApiKey));
+            services.AddScoped<PaymentService>();
+            services.AddScoped<DanceCampService>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
@@ -59,24 +56,24 @@ namespace HarbourhopPaymentSystem
         private void ConfigureDatabase(IServiceCollection services)
         {
             services.AddDbContext<PaymentDatabaseContext>(
-                options => options.UseSqlServer(_settings.DefaultConnection)
+                options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection"))
             );
 
             services.AddTransient<DatabaseInitializer>();
             services.AddScoped<BookingPaymentRepository>();
         }
 
-        private void ConfigureSettings()
+        private void ConfigureApplicationSettings(IServiceCollection services)
         {
-            var configurationSection = _configuration.GetSection("AppSettings");
-            _settings = new Settings();
-            configurationSection.Bind(_settings);
-            var connectionStringSection = _configuration.GetSection("ConnectionStrings");
-            connectionStringSection.Bind(_settings);
+            // Required to use the Options<T> pattern
+            services.AddOptions();
+
+            services.Configure<MollieOptions>(_configuration.GetSection("MollieOptions"));
+            services.Configure<DanceCampOptions>(_configuration.GetSection("DanceCampOptions"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, DatabaseInitializer databaseInitializer)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -88,9 +85,7 @@ namespace HarbourhopPaymentSystem
                 app.UseHsts();
             }
 
-            databaseInitializer.Initialize();
-
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
