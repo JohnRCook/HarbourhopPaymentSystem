@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using OtpNet;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -30,7 +31,10 @@ namespace HarbourhopPaymentSystem.Services
         {
             try
             {
+                _logger.LogInformation($"transactionID: {transactionId}");
                 var booking = _bookingPaymentRepository.GetBookingPayment(transactionId);
+
+                _logger.LogInformation($"booking ID is: {booking.BookingId}");
 
                 byte[] secretKeyByteArray = Base32Encoding.ToBytes(_danceCampOptions.SecretKey);
 
@@ -44,7 +48,7 @@ namespace HarbourhopPaymentSystem.Services
                             new KeyValuePair<string, string>("APIToken", _danceCampOptions.ApiToken),
                             new KeyValuePair<string, string>("Token", totpCode),
                             new KeyValuePair<string, string>("Status", "Completed"),
-                            new KeyValuePair<string, string>("Amount", booking.Amount.ToString("F02")),
+                            new KeyValuePair<string, string>("Amount", booking.Amount.ToString("F02", CultureInfo.InvariantCulture)),
                             new KeyValuePair<string, string>("Currency", "EUR"),
                             new KeyValuePair<string, string>("TxnID", transactionId),
                             new KeyValuePair<string, string>("FeeAmount", "0"),
@@ -67,14 +71,20 @@ namespace HarbourhopPaymentSystem.Services
                         //TODO: discuss notification options. 
                         //There is a chance that mollie payment is successful but update to dancecamp system failed
                         //Generate notification email? 
+                        _logger.LogError("Response from Dance Camp was not succesfull", result);
                     }
+                }
+                else
+                {
+                    _logger.LogError("Request to Dance Camp was not successfull", response);
                 }
             }
             catch (Exception e)
             {
                 //TODO: discuss notification options. 
                 //There is a chance that mollie payment is successful but update to dancecamp system failed
-                //Generate notification email? 
+                //Generate notification email?
+                _logger.LogError("Error occured while sending Payment Receive to Dance Camp", e);
             }
         }
     }

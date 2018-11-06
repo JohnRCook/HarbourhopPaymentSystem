@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using HarbourhopPaymentSystem.Models;
 using HarbourhopPaymentSystem.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mollie.Api.Models.Payment;
 
@@ -13,12 +14,14 @@ namespace HarbourhopPaymentSystem.Controllers
     {
         private readonly PaymentService _paymentService;
         private readonly DanceCampService _danceCampService;
+        private readonly ILogger<PaymentController> _logger;
         private readonly DanceCampOptions _danceCampOptions;
 
-        public PaymentController(PaymentService paymentService, DanceCampService danceCampService, IOptionsSnapshot<DanceCampOptions> danceCampOptions)
+        public PaymentController(PaymentService paymentService, DanceCampService danceCampService, IOptionsSnapshot<DanceCampOptions> danceCampOptions, ILogger<PaymentController> logger)
         {
             _paymentService = paymentService;
             _danceCampService = danceCampService;
+            _logger = logger;
             _danceCampOptions = danceCampOptions.Value;
         }
 
@@ -50,13 +53,13 @@ namespace HarbourhopPaymentSystem.Controllers
 
                 if (status.HasValue && status == PaymentStatus.Paid)
                 {
-                    //await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId);
-                    return Redirect(_danceCampOptions.PaymentSuccessUrl);
+                    // Just update dance camp booking system.
+                    await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId);
                 }
             }
             catch(Exception ex)
             {
-
+                _logger.LogError("Error occured while getting payment information from Mollie.", ex);
             }
             return Redirect(_danceCampOptions.PaymentFailedUrl);
         }
