@@ -1,4 +1,5 @@
-﻿using HarbourhopPaymentSystem.Data;
+﻿using System.Net;
+using HarbourhopPaymentSystem.Data;
 using HarbourhopPaymentSystem.Data.Repositories;
 using HarbourhopPaymentSystem.Services;
 using Microsoft.AspNetCore.Builder;
@@ -8,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace HarbourhopPaymentSystem
 {
@@ -61,6 +64,14 @@ namespace HarbourhopPaymentSystem
 
             services.AddTransient<DatabaseInitializer>();
             services.AddScoped<BookingPaymentRepository>();
+            services.AddSingleton(ConfigureLogger());
+        }
+
+        private ILogger ConfigureLogger()
+        {
+            return new LoggerConfiguration()
+                   .ReadFrom.Configuration(_configuration)
+                   .CreateLogger();
         }
 
         private void ConfigureApplicationSettings(IServiceCollection services)

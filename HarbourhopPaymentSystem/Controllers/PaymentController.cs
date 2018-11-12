@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using HarbourhopPaymentSystem.Models;
 using HarbourhopPaymentSystem.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mollie.Api.Models.Payment;
+using Serilog;
 
 namespace HarbourhopPaymentSystem.Controllers
 {
@@ -14,10 +14,10 @@ namespace HarbourhopPaymentSystem.Controllers
     {
         private readonly PaymentService _paymentService;
         private readonly DanceCampService _danceCampService;
-        private readonly ILogger<PaymentController> _logger;
+        private readonly ILogger _logger;
         private readonly DanceCampOptions _danceCampOptions;
 
-        public PaymentController(PaymentService paymentService, DanceCampService danceCampService, IOptionsSnapshot<DanceCampOptions> danceCampOptions, ILogger<PaymentController> logger)
+        public PaymentController(PaymentService paymentService, DanceCampService danceCampService, IOptionsSnapshot<DanceCampOptions> danceCampOptions, ILogger logger)
         {
             _paymentService = paymentService;
             _danceCampService = danceCampService;
@@ -36,7 +36,17 @@ namespace HarbourhopPaymentSystem.Controllers
             }
             catch (BookingAlreadyExistsException)
             {
+                var warning = $"Payment for booking {bookingId} already exists";
+                _logger.Warning(warning);
+
                 return View("Info", $"Payment for booking {bookingId} already exists");
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = $"An error occured while creating a payment for booking id {bookingId}";
+                _logger.Error(errorMessage, ex);
+
+                return View("Info", errorMessage);
             }
         }
 
@@ -53,13 +63,12 @@ namespace HarbourhopPaymentSystem.Controllers
 
                 if (status.HasValue && status == PaymentStatus.Paid)
                 {
-                    // Just update dance camp booking system.
                     await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId);
                 }
             }
             catch(Exception ex)
             {
-                _logger.LogError("Error occured while getting payment information from Mollie.", ex);
+                _logger.Error($"An error occured while updating status of payment {paymentId}.", ex);
             }
             return Redirect(_danceCampOptions.PaymentFailedUrl);
         }
