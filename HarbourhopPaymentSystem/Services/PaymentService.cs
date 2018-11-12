@@ -1,12 +1,10 @@
 ﻿using HarbourhopPaymentSystem.Data.Repositories;
 using HarbourhopPaymentSystem.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mollie.Api.Client;
 using Mollie.Api.Models;
 using Mollie.Api.Models.Payment.Request;
 using Mollie.Api.Models.Payment.Response;
-using Mollie.Api.Models.Payment;
 using System.Threading.Tasks;
 using System.Globalization;
 
@@ -15,15 +13,13 @@ namespace HarbourhopPaymentSystem.Services
     public class PaymentService
     {
         private readonly BookingPaymentRepository _bookingPaymentRepository;
-        private readonly ILogger<PaymentService> _logger;
         private readonly MollieOptions _mollieOptions;
         private readonly PaymentClient _paymentClient;
 
 
-        public PaymentService(BookingPaymentRepository bookingPaymentRepository, IOptionsSnapshot<MollieOptions> mollieOptions, ILogger<PaymentService> logger)
+        public PaymentService(BookingPaymentRepository bookingPaymentRepository, IOptionsSnapshot<MollieOptions> mollieOptions)
         {
             _bookingPaymentRepository = bookingPaymentRepository;
-            _logger = logger;
             _mollieOptions = mollieOptions.Value;
             _paymentClient = new PaymentClient(_mollieOptions.MollieApiKey);
         }
