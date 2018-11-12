@@ -36,7 +36,7 @@ namespace HarbourhopPaymentSystem.Controllers
             }
             catch (BookingAlreadyExistsException)
             {
-                return Conflict();
+                return View("Info", $"Payment for booking {bookingId} already exists");
             }
         }
 

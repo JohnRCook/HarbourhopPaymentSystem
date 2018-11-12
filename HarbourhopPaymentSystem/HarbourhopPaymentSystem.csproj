@@ -24,7 +24,6 @@
   <ItemGroup>
     <Folder Include="Payment\" />
     <Folder Include="Properties\PublishProfiles\" />
-    <Folder Include="Views\Payment\" />
   </ItemGroup>
 
   <ItemGroup>

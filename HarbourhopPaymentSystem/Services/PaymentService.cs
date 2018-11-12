@@ -44,8 +44,6 @@ namespace HarbourhopPaymentSystem.Services
                 booking = _bookingPaymentRepository.AddBookingPayment(new Data.Models.BookingPayment { BookingId = bookingId, Amount = amount });
             }
 
-            string am = amount.ToString("F02", CultureInfo.InvariantCulture);
-
             var molliePaymentResponse = await _paymentClient.CreatePaymentAsync(
                                             new PaymentRequest
                                             {
@@ -64,8 +62,7 @@ namespace HarbourhopPaymentSystem.Services
 
             return molliePaymentResponse;
         }
-
-
+        
         public Task<PaymentResponse> GetPaymentAsync(string paymentId)
         {
             return _paymentClient.GetPaymentAsync(paymentId);
