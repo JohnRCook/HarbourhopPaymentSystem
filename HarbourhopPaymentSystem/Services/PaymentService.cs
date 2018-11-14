@@ -27,16 +27,18 @@ namespace HarbourhopPaymentSystem.Services
 
         public async Task<PaymentResponse> CreatePayment(int bookingId, double amount, string locale)
         {
-            //TODO: if booking exists? what is the scenario? 
-
             var booking = _bookingPaymentRepository.GetBookingPayment(bookingId);
 
-            if (!string.IsNullOrEmpty(booking?.TransactionId))
+            if(!string.IsNullOrEmpty(booking?.TransactionId))
             {
-                throw new BookingAlreadyExistsException();
+                var payment = _paymentClient.GetPaymentAsync(booking.TransactionId);
+                if(payment.IsCompletedSuccessfully)
+                {
+                    throw new PaymentAlreadyExistsException();
+                }
             }
 
-            if (booking == null)
+            if(booking == null)
             {
                 booking = _bookingPaymentRepository.AddBookingPayment(new Data.Models.BookingPayment { BookingId = bookingId, Amount = amount });
             }
@@ -46,7 +48,6 @@ namespace HarbourhopPaymentSystem.Services
                                             {
                                                 Amount = new Amount(Currency.EUR, amount.ToString("F02", CultureInfo.InvariantCulture)),
                                                 Description = $"Test Harbour Hop Payment for booking {bookingId}",
-                                                //hh web site? thank you page
                                                 RedirectUrl = _mollieOptions.RedirectUrl,
                                                 WebhookUrl = _mollieOptions.WebhookUrl,
                                                 Locale = locale,
@@ -59,7 +60,7 @@ namespace HarbourhopPaymentSystem.Services
 
             return molliePaymentResponse;
         }
-        
+
         public async Task<BookingPaymentResponse> GetPaymentAsync(string paymentId)
         {
             var booking = _bookingPaymentRepository.GetBookingPayment(paymentId);

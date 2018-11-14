@@ -34,7 +34,7 @@ namespace HarbourhopPaymentSystem.Controllers
                 var molliePaymentResponse = await _paymentService.CreatePayment(bookingId, amount, "en_US");
                 return Redirect(molliePaymentResponse.Links.Checkout.Href);
             }
-            catch (BookingAlreadyExistsException)
+            catch (PaymentAlreadyExistsException)
             {
                 return View("Info", $"Payment for booking {bookingId} already exists");
             }

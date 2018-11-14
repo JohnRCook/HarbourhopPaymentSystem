@@ -9,7 +9,6 @@ namespace HarbourhopPaymentSystem.Data
         {
         }
 
-
         public DbSet<BookingPayment> BookingPayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
