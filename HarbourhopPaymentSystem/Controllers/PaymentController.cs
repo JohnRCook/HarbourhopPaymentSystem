@@ -68,7 +68,7 @@ namespace HarbourhopPaymentSystem.Controllers
                     _logger.Warning($"Payment for booking id {paymentResponse.BookingId} is unsuccessful with status {status}");
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.Error($"An error occured while updating status of payment {paymentId}.", ex);
             }
