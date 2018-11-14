@@ -31,14 +31,11 @@ namespace HarbourhopPaymentSystem.Controllers
             try
             {
                 //Possible values: en_US nl_NL nl_BE fr_FR fr_BE de_DE de_AT de_CH es_ES ca_ES pt_PT it_IT nb_NO sv_SE fi_FI da_DK is_IS hu_HU pl_PL lv_LV lt_LT
-                var molliePaymentResponse = await _paymentService.CreatePayment(bookingId, amount, "nl_NL");
+                var molliePaymentResponse = await _paymentService.CreatePayment(bookingId, amount, "en_US");
                 return Redirect(molliePaymentResponse.Links.Checkout.Href);
             }
             catch (BookingAlreadyExistsException)
             {
-                var warning = $"Payment for booking {bookingId} already exists";
-                _logger.Warning(warning);
-
                 return View("Info", $"Payment for booking {bookingId} already exists");
             }
             catch (Exception ex)
@@ -59,11 +56,16 @@ namespace HarbourhopPaymentSystem.Controllers
             {
                 var paymentResponse = await _paymentService.GetPaymentAsync(paymentId);
 
-                var status = paymentResponse.Status;
+                var bookingPayment = paymentResponse;
 
-                if (status.HasValue && status == PaymentStatus.Paid)
+                if (bookingPayment.PaymentStatus.HasValue && bookingPayment.PaymentStatus == PaymentStatus.Paid)
                 {
                     await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId);
+                }
+                else
+                {
+                    var status = bookingPayment.PaymentStatus.HasValue ? bookingPayment.PaymentStatus.Value.ToString() : "unknown";
+                    _logger.Warning($"Payment for booking id {paymentResponse.BookingId} is unsuccessful with status {status}");
                 }
             }
             catch(Exception ex)
