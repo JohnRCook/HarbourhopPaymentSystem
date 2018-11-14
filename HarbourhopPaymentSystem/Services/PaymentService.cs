@@ -7,6 +7,7 @@ using Mollie.Api.Models.Payment.Request;
 using Mollie.Api.Models.Payment.Response;
 using System.Threading.Tasks;
 using System.Globalization;
+using HarbourhopPaymentSystem.Responses;
 
 namespace HarbourhopPaymentSystem.Services
 {
@@ -59,9 +60,12 @@ namespace HarbourhopPaymentSystem.Services
             return molliePaymentResponse;
         }
         
-        public Task<PaymentResponse> GetPaymentAsync(string paymentId)
+        public async Task<BookingPaymentResponse> GetPaymentAsync(string paymentId)
         {
-            return _paymentClient.GetPaymentAsync(paymentId);
+            var booking = _bookingPaymentRepository.GetBookingPayment(paymentId);
+            var payment = await _paymentClient.GetPaymentAsync(paymentId);
+            var bookingPayment = new BookingPaymentResponse {BookingId = booking.BookingId, PaymentStatus = payment.Status};
+            return bookingPayment;
         }
     }
 }
