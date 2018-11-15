@@ -6,9 +6,12 @@ using OtpNet;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using HarbourhopPaymentSystem.Models;
 using Serilog;
 
 namespace HarbourhopPaymentSystem.Services
@@ -18,13 +21,29 @@ namespace HarbourhopPaymentSystem.Services
         private readonly BookingPaymentRepository _bookingPaymentRepository;
         private readonly ILogger _logger;
         private readonly DanceCampOptions _danceCampOptions;
-
+        private readonly HttpClient _httpClient;
 
         public DanceCampService(BookingPaymentRepository bookingPaymentRepository, IOptionsSnapshot<DanceCampOptions> danceCampOptions, ILogger logger)
         {
             _bookingPaymentRepository = bookingPaymentRepository;
             _logger = logger;
             _danceCampOptions = danceCampOptions.Value;
+            _httpClient = new HttpClient();
+        }
+
+        public async Task<double> GetOwedBookingAmount(int bookingId)
+        {
+            var bookings = await GetBookingsReport();
+            var booking = bookings.FirstOrDefault(b => b.BookingID == bookingId);
+            if (booking == null)
+            {
+                throw new BookingNotFoundException();
+            }
+            if (booking.Paid.CompareTo(booking.TotalCost) == 0)
+            {
+                throw new PaymentAlreadyExistsException();
+            }
+            return booking.AmountOwed;
         }
 
         public async Task UpdateDanceCampBookingPaymentStatus(string transactionId)
@@ -56,9 +75,7 @@ namespace HarbourhopPaymentSystem.Services
                             new KeyValuePair<string, string>("EmailNotes", "")
                     });
 
-                var myHttpClient = new HttpClient();
-
-                var response = await myHttpClient.PostAsync(_danceCampOptions.PaymentReceiveDanceCampUrl, formContent);
+                var response = await _httpClient.PostAsync(_danceCampOptions.PaymentReceiveDanceCampUrl, formContent);
 
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -71,7 +88,7 @@ namespace HarbourhopPaymentSystem.Services
                         //TODO: discuss notification options. 
                         //There is a chance that mollie payment is successful but update to dancecamp system failed
                         //Generate notification email? 
-                        _logger.Error("Response from Dance Camp was not succesfull", result);
+                        _logger.Error($"Request to Dance Camp was not successfull, transaction id {transactionId}", response);
                     }
                 }
                 else
@@ -86,6 +103,13 @@ namespace HarbourhopPaymentSystem.Services
                 //Generate notification email?
                 _logger.Error("Error occured while sending Payment Receive to Dance Camp", e);
             }
+        }
+
+        public async Task<IEnumerable<BookingReportRow>> GetBookingsReport()
+        {
+            var report = await _httpClient.GetStringAsync(_danceCampOptions.BookingReportUrl);
+            var csvHelper = new CsvHelper.CsvReader(new StringReader(report));
+            return csvHelper.GetRecords<BookingReportRow>();
         }
     }
 }

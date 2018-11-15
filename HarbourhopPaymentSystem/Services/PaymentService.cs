@@ -8,6 +8,7 @@ using Mollie.Api.Models.Payment.Response;
 using System.Threading.Tasks;
 using System.Globalization;
 using HarbourhopPaymentSystem.Responses;
+using Mollie.Api.Models.Payment;
 
 namespace HarbourhopPaymentSystem.Services
 {
@@ -25,18 +26,24 @@ namespace HarbourhopPaymentSystem.Services
             _paymentClient = new PaymentClient(_mollieOptions.MollieApiKey);
         }
 
-        public async Task<PaymentResponse> CreatePayment(int bookingId, double amount, string locale)
+        public async Task ValidateBookingPayment(int bookingId, double amountToPay)
         {
             var booking = _bookingPaymentRepository.GetBookingPayment(bookingId);
 
-            if(!string.IsNullOrEmpty(booking?.TransactionId))
+            if (!string.IsNullOrEmpty(booking?.TransactionId))
             {
-                var payment = _paymentClient.GetPaymentAsync(booking.TransactionId);
-                if(payment.IsCompletedSuccessfully)
+                var payment = await _paymentClient.GetPaymentAsync(booking.TransactionId);
+                var amount = new Amount(Currency.EUR, amountToPay.ToString("F02", CultureInfo.InvariantCulture));
+                if (payment.Status == PaymentStatus.Paid && payment.Amount == amount)
                 {
                     throw new PaymentAlreadyExistsException();
                 }
             }
+        }
+
+        public async Task<PaymentResponse> CreatePayment(int bookingId, double amount, string locale)
+        {
+            var booking = _bookingPaymentRepository.GetBookingPayment(bookingId);
 
             if(booking == null)
             {

@@ -11,5 +11,7 @@
         public string PaymentSuccessUrl { get; set; }
 
         public string PaymentFailedUrl { get; set; }
+
+        public string BookingReportUrl { get; set; }
     }
 }
