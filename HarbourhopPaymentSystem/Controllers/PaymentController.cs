@@ -30,13 +30,27 @@ namespace HarbourhopPaymentSystem.Controllers
         {
             try
             {
+                //amount parameter will be removed
+
+                var amountOwed = await _danceCampService.GetOwedBookingAmount(bookingId);
+
+                await _paymentService.ValidateBookingPayment(bookingId, amountOwed);
+
                 //Possible values: en_US nl_NL nl_BE fr_FR fr_BE de_DE de_AT de_CH es_ES ca_ES pt_PT it_IT nb_NO sv_SE fi_FI da_DK is_IS hu_HU pl_PL lv_LV lt_LT
-                var molliePaymentResponse = await _paymentService.CreatePayment(bookingId, amount, "en_US");
+                var molliePaymentResponse = await _paymentService.CreatePayment(bookingId, amountOwed, "en_US");
                 return Redirect(molliePaymentResponse.Links.Checkout.Href);
             }
-            catch (BookingAlreadyExistsException)
+            catch (PaymentAlreadyExistsException)
             {
                 return View("Info", $"Payment for booking {bookingId} already exists");
+            }
+            catch (InvalidPaymentAmountException)
+            {
+                return View("Info", $"Invalid payment amount for booking {bookingId}");
+            }
+            catch (BookingNotFoundException)
+            {
+                return View("Info", $"Booking with {bookingId} was not found in the system");
             }
             catch (Exception ex)
             {

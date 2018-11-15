@@ -2,7 +2,7 @@
 
 namespace HarbourhopPaymentSystem.Models
 {
-    public class BookingAlreadyExistsException: Exception
+    public class PaymentAlreadyExistsException: Exception
     {
     }
 }

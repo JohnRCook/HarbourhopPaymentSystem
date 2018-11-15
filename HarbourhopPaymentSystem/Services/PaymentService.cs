@@ -8,6 +8,7 @@ using Mollie.Api.Models.Payment.Response;
 using System.Threading.Tasks;
 using System.Globalization;
 using HarbourhopPaymentSystem.Responses;
+using Mollie.Api.Models.Payment;
 
 namespace HarbourhopPaymentSystem.Services
 {
@@ -25,18 +26,26 @@ namespace HarbourhopPaymentSystem.Services
             _paymentClient = new PaymentClient(_mollieOptions.MollieApiKey);
         }
 
-        public async Task<PaymentResponse> CreatePayment(int bookingId, double amount, string locale)
+        public async Task ValidateBookingPayment(int bookingId, double amountToPay)
         {
-            //TODO: if booking exists? what is the scenario? 
-
             var booking = _bookingPaymentRepository.GetBookingPayment(bookingId);
 
             if (!string.IsNullOrEmpty(booking?.TransactionId))
             {
-                throw new BookingAlreadyExistsException();
+                var payment = await _paymentClient.GetPaymentAsync(booking.TransactionId);
+                var amount = new Amount(Currency.EUR, amountToPay.ToString("F02", CultureInfo.InvariantCulture));
+                if (payment.Status == PaymentStatus.Paid && payment.Amount == amount)
+                {
+                    throw new PaymentAlreadyExistsException();
+                }
             }
+        }
 
-            if (booking == null)
+        public async Task<PaymentResponse> CreatePayment(int bookingId, double amount, string locale)
+        {
+            var booking = _bookingPaymentRepository.GetBookingPayment(bookingId);
+
+            if(booking == null)
             {
                 booking = _bookingPaymentRepository.AddBookingPayment(new Data.Models.BookingPayment { BookingId = bookingId, Amount = amount });
             }
@@ -46,7 +55,6 @@ namespace HarbourhopPaymentSystem.Services
                                             {
                                                 Amount = new Amount(Currency.EUR, amount.ToString("F02", CultureInfo.InvariantCulture)),
                                                 Description = $"Test Harbour Hop Payment for booking {bookingId}",
-                                                //hh web site? thank you page
                                                 RedirectUrl = _mollieOptions.RedirectUrl,
                                                 WebhookUrl = _mollieOptions.WebhookUrl,
                                                 Locale = locale,
@@ -59,7 +67,7 @@ namespace HarbourhopPaymentSystem.Services
 
             return molliePaymentResponse;
         }
-        
+
         public async Task<BookingPaymentResponse> GetPaymentAsync(string paymentId)
         {
             var booking = _bookingPaymentRepository.GetBookingPayment(paymentId);
