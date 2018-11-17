@@ -16,5 +16,7 @@ namespace HarbourhopPaymentSystem.Data.Models
         public double Amount { get; set; }
 
         public string TransactionId { get; set; }
+
+        public bool? Success { get; set; }
     }
 }

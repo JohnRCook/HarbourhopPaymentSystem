@@ -1,0 +1,21 @@
+﻿@using HarbourhopPaymentSystem.Models;
+
+@{
+    ViewData["Title"] = "Harbour Hop Payment System - Payment Status";
+}
+
+@model PaymentStatusViewModel
+
+
+<h2>@ViewData["Title"]</h2>
+
+@if (Model.Success)
+{
+    <p>Your payment has been succesfully processed!</p>
+    <img src="~/images/paymentsuccess.gif" alt="Throw Money" class="center">
+}
+else
+{
+    <p>Oh no! Something went wrong. If you need help contact us at: harbourhop@gmail.com</p>
+    <img src="~/images/paymentfailed.gif" alt="Throw Money" class="center">
+}

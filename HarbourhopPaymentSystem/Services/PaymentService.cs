@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using System.Globalization;
 using HarbourhopPaymentSystem.Responses;
 using Mollie.Api.Models.Payment;
+using HarbourhopPaymentSystem.Data.Models;
+using System;
 
 namespace HarbourhopPaymentSystem.Services
 {
@@ -24,6 +26,20 @@ namespace HarbourhopPaymentSystem.Services
             _bookingPaymentRepository = bookingPaymentRepository;
             _mollieOptions = mollieOptions.Value;
             _paymentClient = new PaymentClient(_mollieOptions.MollieApiKey);
+        }
+
+        public BookingPayment GetBookingPayment(int bookingId)
+        {
+            try
+            {
+                var booking = _bookingPaymentRepository.GetBookingPayment(bookingId);
+                return booking;
+            }
+            catch (Exception)
+            {
+                // Do nothing.
+            }
+            return null;
         }
 
         public async Task ValidateBookingPayment(int bookingId, double amountToPay)
@@ -47,7 +63,7 @@ namespace HarbourhopPaymentSystem.Services
 
             if(booking == null)
             {
-                booking = _bookingPaymentRepository.AddBookingPayment(new Data.Models.BookingPayment { BookingId = bookingId, Amount = amount });
+                booking = _bookingPaymentRepository.AddBookingPayment(new BookingPayment { BookingId = bookingId, Amount = amount });
             }
 
             var molliePaymentResponse = await _paymentClient.CreatePaymentAsync(
@@ -55,9 +71,9 @@ namespace HarbourhopPaymentSystem.Services
                                             {
                                                 Amount = new Amount(Currency.EUR, amount.ToString("F02", CultureInfo.InvariantCulture)),
                                                 Description = $"Test Harbour Hop Payment for booking {bookingId}",
-                                                RedirectUrl = _mollieOptions.RedirectUrl,
+                                                RedirectUrl = $"{_mollieOptions.RedirectUrl}/{bookingId}",
                                                 WebhookUrl = _mollieOptions.WebhookUrl,
-                                                Locale = locale,
+                                                //Locale = locale,
                                                 //Method = PaymentMethod.CreditCard | PaymentMethod.Ideal | PaymentMethod.PayPal
                                             });
 
@@ -66,6 +82,24 @@ namespace HarbourhopPaymentSystem.Services
             _bookingPaymentRepository.UpdateBookingPayment(booking);
 
             return molliePaymentResponse;
+        }
+
+        public void SetBookingPaymentStatus(int bookingId, bool success)
+        {
+            try
+            {
+                var bookingPayment = GetBookingPayment(bookingId);
+
+                if (bookingPayment != null)
+                {
+                    bookingPayment.Success = success;
+                    _bookingPaymentRepository.UpdateBookingPayment(bookingPayment);
+                }
+            }
+            catch (Exception)
+            {
+                // Do nothing. Just go on!
+            }
         }
 
         public async Task<BookingPaymentResponse> GetPaymentAsync(string paymentId)

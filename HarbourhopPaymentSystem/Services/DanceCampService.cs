@@ -46,7 +46,7 @@ namespace HarbourhopPaymentSystem.Services
             return booking.AmountOwed;
         }
 
-        public async Task UpdateDanceCampBookingPaymentStatus(string transactionId)
+        public async Task UpdateDanceCampBookingPaymentStatus(string transactionId, bool success)
         {
             try
             {
@@ -60,13 +60,15 @@ namespace HarbourhopPaymentSystem.Services
                 var totp = new Totp(secretKeyByteArray, 30, OtpHashMode.Sha1, 6);
                 var totpCode = totp.ComputeTotp();
 
+                string status = success ? "Completed" : "Payment Failed";
+
                 var formContent = new FormUrlEncodedContent(
                     new[]
                     {
                             new KeyValuePair<string, string>("BookingID", booking.BookingId.ToString()),
                             new KeyValuePair<string, string>("APIToken", _danceCampOptions.ApiToken),
                             new KeyValuePair<string, string>("Token", totpCode),
-                            new KeyValuePair<string, string>("Status", "Completed"),
+                            new KeyValuePair<string, string>("Status", status),
                             new KeyValuePair<string, string>("Amount", booking.Amount.ToString("F02", CultureInfo.InvariantCulture)),
                             new KeyValuePair<string, string>("Currency", "EUR"),
                             new KeyValuePair<string, string>("TxnID", transactionId),
@@ -109,6 +111,7 @@ namespace HarbourhopPaymentSystem.Services
         {
             var report = await _httpClient.GetStringAsync(_danceCampOptions.BookingReportUrl);
             var csvHelper = new CsvHelper.CsvReader(new StringReader(report));
+            csvHelper.Configuration.CultureInfo = CultureInfo.InvariantCulture;
             return csvHelper.GetRecords<BookingReportRow>();
         }
     }

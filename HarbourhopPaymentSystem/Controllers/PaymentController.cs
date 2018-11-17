@@ -67,19 +67,23 @@ namespace HarbourhopPaymentSystem.Controllers
 
                 if (bookingPayment.PaymentStatus.HasValue && bookingPayment.PaymentStatus == PaymentStatus.Paid)
                 {
-                    await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId);
+                    _paymentService.SetBookingPaymentStatus(bookingPayment.BookingId, success: true);
+                    await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId, success: true);
                 }
                 else
                 {
                     var status = bookingPayment.PaymentStatus.HasValue ? bookingPayment.PaymentStatus.Value.ToString() : "unknown";
                     _logger.Warning($"Payment for booking id {paymentResponse.BookingId} is unsuccessful with status {status}");
+
+                    _paymentService.SetBookingPaymentStatus(bookingPayment.BookingId, success: false);
+                    await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId, success: false);
                 }
             }
             catch (Exception ex)
             {
                 _logger.Error($"An error occured while updating status of payment {paymentId}.", ex);
             }
-            return Redirect(_danceCampOptions.PaymentFailedUrl);
+            return Ok();
         }
 
         [HttpGet("hello-world")]
