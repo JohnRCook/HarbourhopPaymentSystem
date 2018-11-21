@@ -11,11 +11,21 @@
 
 @if (Model.Success)
 {
-    <p>Your payment has been succesfully processed!</p>
-    <img src="~/images/paymentsuccess.gif" alt="Throw Money" class="center">
+<p>
+    Hurrah! Your payment has been successfully processed!
+    <br>Thank you for confirming the booking.
+    <br>Have a look at the confirmation email in your mailbox and see you on the dance floor in Rotterdam. Can’t wait!
+</p>
+     <img src="~/images/paymentsuccess.gif" alt="Throw Money" class="center">
 }
 else
 {
-    <p>Oh no! Something went wrong. If you need help contact us at: harbourhop@gmail.com</p>
-    <img src="~/images/paymentfailed.gif" alt="Throw Money" class="center">
+
+    <p>Whoops!.. Something went wrong with your payment...
+    <br>Check your account to see what happened?...
+    <br> You might want to give it another try.
+    <br>If you need our help, drop us a line: harbourhop@gmail.com.</p>
+
+<img src="~/images/paymentfailed.gif" alt="Throw Money" class="center">
 }
+/**/

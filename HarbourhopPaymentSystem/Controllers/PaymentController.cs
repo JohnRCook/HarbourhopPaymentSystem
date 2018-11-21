@@ -39,18 +39,18 @@ namespace HarbourhopPaymentSystem.Controllers
             }
             catch (PaymentAlreadyExistsException)
             {
-                return View("Info", $"Payment for booking {bookingId} already exists");
+                return View("PaymentExists", $"Payment for booking {bookingId} already exists");
             }
             catch (BookingNotFoundException)
             {
-                return View("Info", $"Booking with {bookingId} was not found in the system");
+                return View("BookingNotFound", $"Booking with {bookingId} was not found in the system");
             }
             catch (Exception ex)
             {
                 var errorMessage = $"An error occured while creating a payment for booking id {bookingId}";
                 _logger.Error(errorMessage, ex);
 
-                return View("Info", errorMessage);
+                return View("PaymentError", errorMessage);
             }
         }
 
