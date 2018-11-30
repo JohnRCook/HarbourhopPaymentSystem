@@ -70,11 +70,9 @@ namespace HarbourhopPaymentSystem.Services
                                             new PaymentRequest
                                             {
                                                 Amount = new Amount(Currency.EUR, amount.ToString("F02", CultureInfo.InvariantCulture)),
-                                                Description = $"Test Harbour Hop Payment for booking {bookingId}",
+                                                Description = $"Harbour Hop Payment for booking {bookingId}",
                                                 RedirectUrl = $"{_mollieOptions.RedirectUrl}/{bookingId}",
                                                 WebhookUrl = _mollieOptions.WebhookUrl,
-                                                //Locale = locale,
-                                                //Method = PaymentMethod.CreditCard | PaymentMethod.Ideal | PaymentMethod.PayPal
                                             });
 
             booking.TransactionId = molliePaymentResponse.Id;
