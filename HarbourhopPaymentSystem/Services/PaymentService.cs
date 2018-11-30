@@ -70,7 +70,7 @@ namespace HarbourhopPaymentSystem.Services
                                             new PaymentRequest
                                             {
                                                 Amount = new Amount(Currency.EUR, amount.ToString("F02", CultureInfo.InvariantCulture)),
-                                                Description = $"Harbour Hop Payment for booking {bookingId}",
+                                                Description = $"Payment for booking {bookingId}",
                                                 RedirectUrl = $"{_mollieOptions.RedirectUrl}/{bookingId}",
                                                 WebhookUrl = _mollieOptions.WebhookUrl,
                                             });
