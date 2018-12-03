@@ -73,10 +73,13 @@ namespace HarbourhopPaymentSystem.Controllers
                 else
                 {
                     var status = bookingPayment.PaymentStatus.HasValue ? bookingPayment.PaymentStatus.Value.ToString() : "unknown";
-                    _logger.Warning($"Payment for booking id {paymentResponse.BookingId} is unsuccessful with status {status}");
+                    if(status != PaymentStatus.Expired.ToString())
+                    {
+                        _logger.Warning($"Payment for booking id {paymentResponse.BookingId} is unsuccessful with status {status}");
 
-                    _paymentService.SetBookingPaymentStatus(bookingPayment.BookingId, success: false);
-                    await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId, success: false);
+                        _paymentService.SetBookingPaymentStatus(bookingPayment.BookingId, success:false);
+                        await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId, success:false);
+                    }
                 }
             }
             catch (Exception ex)
