@@ -103,7 +103,7 @@ namespace HarbourhopPaymentSystem.Services
                 //TODO: discuss notification options. 
                 //There is a chance that mollie payment is successful but update to dancecamp system failed
                 //Generate notification email?
-                _logger.Error("Error occured while sending Payment Receive to Dance Camp", e);
+                _logger.Error($"Error occured while sending Payment Receive to Dance Camp. Error: {e.Message}", e);
             }
         }
 
