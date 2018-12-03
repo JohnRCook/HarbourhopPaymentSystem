@@ -73,6 +73,7 @@ namespace HarbourhopPaymentSystem.Services
                                                 Description = $"Payment for booking {bookingId}",
                                                 RedirectUrl = $"{_mollieOptions.RedirectUrl}/{bookingId}",
                                                 WebhookUrl = _mollieOptions.WebhookUrl,
+                                                Metadata = bookingId.ToString()
                                             });
 
             booking.TransactionId = molliePaymentResponse.Id;
@@ -102,9 +103,9 @@ namespace HarbourhopPaymentSystem.Services
 
         public async Task<BookingPaymentResponse> GetPaymentAsync(string paymentId)
         {
-            var booking = _bookingPaymentRepository.GetBookingPayment(paymentId);
             var payment = await _paymentClient.GetPaymentAsync(paymentId);
-            var bookingPayment = new BookingPaymentResponse {BookingId = booking.BookingId, PaymentStatus = payment.Status};
+            var bookingId = int.Parse(payment.Metadata);
+            var bookingPayment = new BookingPaymentResponse {BookingId = bookingId, PaymentStatus = payment.Status};
             return bookingPayment;
         }
     }
