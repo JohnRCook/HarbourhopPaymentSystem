@@ -84,7 +84,7 @@ namespace HarbourhopPaymentSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error($"An error occured while updating status of payment {paymentId}.", ex);
+                _logger.Error($"An error occured while updating status of payment {paymentId}. Error message: {ex.Message}", ex);
             }
             return Ok();
         }
