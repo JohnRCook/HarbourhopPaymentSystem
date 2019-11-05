@@ -15,18 +15,27 @@ namespace HarbourhopPaymentSystem.Controllers
         private readonly PaymentService _paymentService;
         private readonly DanceCampService _danceCampService;
         private readonly ILogger _logger;
-        private readonly DanceCampOptions _danceCampOptions;
 
         public PaymentController(PaymentService paymentService, DanceCampService danceCampService, IOptionsSnapshot<DanceCampOptions> danceCampOptions, ILogger logger)
         {
             _paymentService = paymentService;
             _danceCampService = danceCampService;
             _logger = logger;
-            _danceCampOptions = danceCampOptions.Value;
         }
 
         [HttpGet("create")]
         public async Task<IActionResult> CreatePayment(int bookingId)
+        {
+            return await ExecuteCreatePayment(bookingId);
+        }
+
+        [HttpPost("create")]
+        public async Task<IActionResult> CreatePaymentAfterRegistration(PaymentRequest request)
+        {
+            return await ExecuteCreatePayment(request.BookingID);
+        }
+
+        private async Task<IActionResult> ExecuteCreatePayment(int bookingId)
         {
             try
             {
