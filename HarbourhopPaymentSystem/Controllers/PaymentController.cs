@@ -30,7 +30,7 @@ namespace HarbourhopPaymentSystem.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreatePaymentAfterRegistration(PaymentRequest request)
+        public async Task<IActionResult> CreatePaymentAfterRegistration([FromBody]PaymentRequest request)
         {
             return await ExecuteCreatePayment(request.BookingID);
         }
