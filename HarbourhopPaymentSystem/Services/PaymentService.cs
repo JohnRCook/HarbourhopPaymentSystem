@@ -83,7 +83,7 @@ namespace HarbourhopPaymentSystem.Services
             return molliePaymentResponse;
         }
 
-        public void SetBookingPaymentStatus(int bookingId, bool success)
+        public void SetBookingPaymentStatus(int bookingId, bool success, string paymentStatus)
         {
             try
             {
@@ -92,6 +92,7 @@ namespace HarbourhopPaymentSystem.Services
                 if (bookingPayment != null)
                 {
                     bookingPayment.Success = success;
+                    bookingPayment.PaymentStatus = paymentStatus;
                     _bookingPaymentRepository.UpdateBookingPayment(bookingPayment);
                 }
             }

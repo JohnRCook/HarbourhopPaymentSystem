@@ -46,7 +46,7 @@ namespace HarbourhopPaymentSystem.Services
             return booking.AmountOwed;
         }
 
-        public async Task UpdateDanceCampBookingPaymentStatus(string transactionId, bool success)
+        public async Task UpdateDanceCampBookingPaymentStatus(string transactionId, bool success, string paymentStatus)
         {
             try
             {
@@ -87,22 +87,18 @@ namespace HarbourhopPaymentSystem.Services
 
                     if (result.Status != "success")
                     {
-                        //TODO: discuss notification options. 
-                        //There is a chance that mollie payment is successful but update to dancecamp system failed
-                        //Generate notification email? 
-                        _logger.Error($"Request to Dance Camp was not successfull, transaction id {transactionId}", response);
+                        _logger.Error($"Request to Dance Camp for bookingID {booking.BookingId} was not successfull, transaction id {transactionId}. The result is: {stringContent}. Paymentstatus: {paymentStatus}", response);
                     }
                 }
                 else
                 {
-                    _logger.Error($"Request to Dance Camp was not successfull, transaction id {transactionId}", response);
+                    var stringContent = await response.Content.ReadAsStringAsync();
+
+                    _logger.Error($"Request to Dance Camp for bookingID {booking.BookingId} was not successfull, transaction id {transactionId}. Response was: {response.StatusCode}, {stringContent}. Paymentstatus: {paymentStatus}", response);
                 }
             }
             catch (Exception e)
             {
-                //TODO: discuss notification options. 
-                //There is a chance that mollie payment is successful but update to dancecamp system failed
-                //Generate notification email?
                 _logger.Error($"Error occured while sending Payment Receive to Dance Camp for transaction {transactionId}. Error: {e.Message}", e);
             }
         }
