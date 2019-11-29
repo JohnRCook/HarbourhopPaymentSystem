@@ -46,12 +46,12 @@ namespace HarbourhopPaymentSystem.Services
             return booking.AmountOwed;
         }
 
-        public async Task UpdateDanceCampBookingPaymentStatus(string transactionId, bool success, string paymentStatus)
+        public async Task UpdateDanceCampBookingPaymentStatus(int bookingId, string transactionId, bool success, string paymentStatus)
         {
             try
             {
                 _logger.Information($"transactionID: {transactionId}");
-                var booking = _bookingPaymentRepository.GetBookingPayment(transactionId);
+                var booking = _bookingPaymentRepository.GetBookingPayment(bookingId);
 
                 _logger.Information($"booking ID is: {booking.BookingId}");
 

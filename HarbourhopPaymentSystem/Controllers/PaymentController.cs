@@ -73,12 +73,12 @@ namespace HarbourhopPaymentSystem.Controllers
                 var paymentResponse = await _paymentService.GetPaymentAsync(paymentId);
 
                 var bookingPayment = paymentResponse;
-
+                
                 if (bookingPayment.PaymentStatus.HasValue && bookingPayment.PaymentStatus == PaymentStatus.Paid)
                 {
                     var status = bookingPayment.PaymentStatus.Value.ToString();
                     _paymentService.SetBookingPaymentStatus(bookingPayment.BookingId, success: true, status);
-                    await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId, success: true, status);
+                    await _danceCampService.UpdateDanceCampBookingPaymentStatus(bookingPayment.BookingId, paymentId, success: true, status);
                 }
                 else
                 {
