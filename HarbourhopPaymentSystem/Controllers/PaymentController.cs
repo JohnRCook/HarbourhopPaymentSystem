@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using HarbourhopPaymentSystem.Models;
 using HarbourhopPaymentSystem.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Mollie.Api.Models.Payment;
 using Serilog;
 
@@ -16,7 +15,7 @@ namespace HarbourhopPaymentSystem.Controllers
         private readonly DanceCampService _danceCampService;
         private readonly ILogger _logger;
 
-        public PaymentController(PaymentService paymentService, DanceCampService danceCampService, IOptionsSnapshot<DanceCampOptions> danceCampOptions, ILogger logger)
+        public PaymentController(PaymentService paymentService, DanceCampService danceCampService, ILogger logger)
         {
             _paymentService = paymentService;
             _danceCampService = danceCampService;
@@ -56,10 +55,9 @@ namespace HarbourhopPaymentSystem.Controllers
             }
             catch (Exception ex)
             {
-                var errorMessage = $"An error occured while creating a payment for booking id {bookingId}";
-                _logger.Error(errorMessage, ex);
+                _logger.Error(ex, "An error occured while creating a payment for booking id {BookingId}", bookingId);
 
-                return View("PaymentError", errorMessage);
+                return View("PaymentError", $"An error occured while creating a payment for booking id {bookingId}");
             }
         }
 
@@ -74,18 +72,18 @@ namespace HarbourhopPaymentSystem.Controllers
 
                 var bookingPayment = paymentResponse;
                 
-                if (bookingPayment.PaymentStatus.HasValue && bookingPayment.PaymentStatus == PaymentStatus.Paid)
+                if (bookingPayment.PaymentStatus == PaymentStatus.Paid)
                 {
-                    var status = bookingPayment.PaymentStatus.Value.ToString();
+                    var status = bookingPayment.PaymentStatus;
                     _paymentService.SetBookingPaymentStatus(bookingPayment.BookingId, success: true, status);
                     await _danceCampService.UpdateDanceCampBookingPaymentStatus(bookingPayment.BookingId, paymentId, success: true, status);
                 }
                 else
                 {
-                    var status = bookingPayment.PaymentStatus.HasValue ? bookingPayment.PaymentStatus.Value.ToString() : "unknown";
-                    _logger.Warning($"Payment for booking id {paymentResponse.BookingId} is unsuccessful with status {status}");
+                    _logger.Warning("Payment for booking id {PaymentResponseBookingId} is unsuccessful with status {BookingPaymentPaymentStatus}",
+                        paymentResponse.BookingId, bookingPayment.PaymentStatus);
 
-                    _paymentService.SetBookingPaymentStatus(bookingPayment.BookingId, success:false, status);
+                    _paymentService.SetBookingPaymentStatus(bookingPayment.BookingId, success:false, bookingPayment.PaymentStatus);
 
                     // Only send a message to dancecamps if the payment was succesful.
                     //await _danceCampService.UpdateDanceCampBookingPaymentStatus(paymentId, success:false, status);
@@ -93,7 +91,7 @@ namespace HarbourhopPaymentSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error($"An error occured while updating status of payment {paymentId}. Error message: {ex.Message}", ex);
+                _logger.Error(ex,"An error occured while updating status of payment {PaymentId}. Error message: {ExMessage}", paymentId, ex.Message);
             }
             return Ok();
         }

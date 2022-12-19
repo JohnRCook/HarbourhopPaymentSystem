@@ -1,36 +1,21 @@
-﻿using System.Net;
-using HarbourhopPaymentSystem.Data;
+﻿using HarbourhopPaymentSystem.Data;
 using HarbourhopPaymentSystem.Data.Repositories;
 using HarbourhopPaymentSystem.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
 
 namespace HarbourhopPaymentSystem
 {
     public sealed class Startup
     {
-        public Startup(IHostingEnvironment env)
+        public Startup(IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json",
-                     optional: false,
-                     reloadOnChange: true)
-                .AddEnvironmentVariables();
-
-            if (env.IsDevelopment())
-            {
-                builder.AddUserSecrets<Startup>();
-            }
-
-            _configuration = builder.Build();
+            _configuration = configuration;
         }
 
 
@@ -44,7 +29,7 @@ namespace HarbourhopPaymentSystem
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => true;
+                options.CheckConsentNeeded = _ => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
@@ -53,7 +38,7 @@ namespace HarbourhopPaymentSystem
             services.AddScoped<PaymentService>();
             services.AddScoped<DanceCampService>();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc();
         }
 
         private void ConfigureDatabase(IServiceCollection services)
@@ -84,27 +69,23 @@ namespace HarbourhopPaymentSystem
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-                app.UseHsts();
-            }
+            // Register before static files to set the response headers for each request.
+            app.UseHsts();
+            
+            app.UseExceptionHandler("/Home/Error");
 
             //app.UseHttpsRedirection();
+            app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
-            app.UseMvc(routes =>
+            app.UseRouting();
+            
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllers();
             });
         }
     }

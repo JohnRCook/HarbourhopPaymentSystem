@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HarbourhopPaymentSystem.Controllers
 {
+    [Route("")]
     public class HomeController : Controller
     {
         private readonly PaymentService _paymentService;
@@ -13,6 +14,7 @@ namespace HarbourhopPaymentSystem.Controllers
             _paymentService = paymentService;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
             return View();

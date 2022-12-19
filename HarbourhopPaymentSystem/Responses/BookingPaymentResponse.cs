@@ -4,7 +4,7 @@ namespace HarbourhopPaymentSystem.Responses
 {
     public class BookingPaymentResponse
     {
-        public PaymentStatus? PaymentStatus { get; set; }
+        public string PaymentStatus { get; set; }
         public int BookingId { get; set; }
     }
 }

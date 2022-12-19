@@ -1,8 +1,8 @@
 ﻿using System;
 using HarbourhopPaymentSystem.Data;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -12,7 +12,7 @@ namespace HarbourhopPaymentSystem
     {
         public static void Main(string[] args)
         {
-            var host = CreateWebHostBuilder(args).Build();
+            var host = CreateHostBuilder(args).Build();
 
             using(var scope = host.Services.CreateScope())
             {
@@ -26,16 +26,17 @@ namespace HarbourhopPaymentSystem
                 catch(Exception ex)
                 {
                     var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, $"An error occurred migrating and or seeding the DB using the {nameof(DatabaseInitializer)}");
+                    logger.LogError(ex, "An error occurred migrating and or seeding the DB using the {DatabaseInitializer}", nameof(DatabaseInitializer));
                 }
             }
 
             host.Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                   .UseSerilog()
-                   .UseStartup<Startup>();
+        private static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webHostBuilder =>
+                    webHostBuilder.UseStartup<Startup>())
+                .UseSerilog();
     }
 }
